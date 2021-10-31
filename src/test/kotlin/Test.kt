@@ -20,12 +20,12 @@ class Test {
         testUnit(MqttPingResp())
 
         var connect = MqttConnect()
-        connect.connectFlags = 0x02
+        connect.cleanStart = true
         connect.keepAlive = 65535
         connect.clientId = "10102020"
         connect.properties[MqttProperty.SERVER_KEEP_ALIVE] = 255
         connect = testUnit(connect) as MqttConnect
-        assertThat(connect.connectFlags).isEqualTo(0x02)
+        assertThat(connect.cleanStart).isEqualTo(true)
         assertThat(connect.keepAlive).isEqualTo(65535)
         assertThat(connect.clientId).isEqualTo("10102020")
         assertThat(connect.properties[MqttProperty.SERVER_KEEP_ALIVE]).isEqualTo(255)

@@ -12,30 +12,36 @@ abstract class MqttFixedHeader(
 ) {
     var dup: Boolean
         @JsonIgnore
-        get() = flags.and(0x08) > 0
+        get() = flags.and(FLAG_DUP_MASK) != 0
         set(value) {
             flags = if (value)
-                flags.or(0x08)
+                flags.or(FLAG_DUP_MASK)
             else
-                flags.and(0x08.inv())
+                flags.and(FLAG_DUP_MASK.inv())
         }
     var qos: MqttQos
         @JsonIgnore
-        get() = MqttQos.valueOf(flags.and(0x06).shr(1))
+        get() = MqttQos.valueOf(flags.and(FLAG_QOS_MASK).shr(1))
         set(value) {
-            flags = flags.and(0x06.inv()).or(value.level.shl(1))
+            flags = flags.and(FLAG_QOS_MASK.inv()).or(value.level.shl(1))
         }
     var retain: Boolean
         @JsonIgnore
-        get() = flags.and(0x01) > 0
+        get() = flags.and(FLAG_RETAIN_MASK) != 0
         set(value) {
             flags = if (value)
-                flags.or(0x01)
+                flags.or(FLAG_RETAIN_MASK)
             else
-                flags.and(0x01.inv())
+                flags.and(FLAG_RETAIN_MASK.inv())
         }
 
     abstract fun readFrom(buf: ByteBuf)
     abstract fun writeTo(buf: ByteBuf)
     protected abstract fun calcLength(): Int
+
+    companion object {
+        private const val FLAG_RETAIN_MASK = 0x01
+        private const val FLAG_QOS_MASK = 0x06
+        private const val FLAG_DUP_MASK = 0x08
+    }
 }

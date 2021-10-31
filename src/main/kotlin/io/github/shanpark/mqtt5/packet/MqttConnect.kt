@@ -1,5 +1,6 @@
 package io.github.shanpark.mqtt5.packet
 
+import com.fasterxml.jackson.annotation.JsonIgnore
 import io.github.shanpark.mqtt5.exception.InvalidPacketException
 import io.github.shanpark.mqtt5.packet.derivative.MqttProperties
 import io.github.shanpark.mqtt5.packet.primitive.*
@@ -21,18 +22,57 @@ class MqttConnect(flags: Int, remainingLength: Int = -1): MqttFixedHeader(MqttPa
     var userName: String? = null
     var password: ByteArray? = null
 
-    val cleanStart: Boolean
-        get() = connectFlags.and(0x02) > 0
-    val willFlag: Boolean
-        get() = connectFlags.and(0x04) > 0
-    val willQos: MqttQos
-        get() = MqttQos.valueOf(connectFlags.and(0x18).shr(3))
-    val willRetain: Boolean
-        get() = connectFlags.and(0x20) > 0
-    val passwordFlag: Boolean
-        get() = connectFlags.and(0x40) > 0
-    val userNameFlag: Boolean
-        get() = connectFlags.and(0x80) > 0
+    var cleanStart: Boolean
+        @JsonIgnore
+        get() = connectFlags.and(FLAG_CLEAN_START_MASK) > 0
+        set(value) {
+            connectFlags = if (value)
+                connectFlags.or(FLAG_CLEAN_START_MASK)
+            else
+                connectFlags.and(FLAG_CLEAN_START_MASK.inv())
+        }
+    var willFlag: Boolean
+        @JsonIgnore
+        get() = connectFlags.and(FLAG_WILL_MASK) > 0
+        set(value) {
+            connectFlags = if (value)
+                connectFlags.or(FLAG_WILL_MASK)
+            else
+                connectFlags.and(FLAG_WILL_MASK.inv())
+        }
+    var willQos: MqttQos
+        @JsonIgnore
+        get() = MqttQos.valueOf(connectFlags.and(FLAG_WILL_QOS_MASK).shr(3))
+        set(value) {
+            connectFlags = connectFlags.and(FLAG_WILL_QOS_MASK.inv()).or(value.level.shl(3))
+        }
+    var willRetain: Boolean
+        @JsonIgnore
+        get() = connectFlags.and(FLAG_WILL_RETAIN_MASK) > 0
+        set(value) {
+            connectFlags = if (value)
+                connectFlags.or(FLAG_WILL_RETAIN_MASK)
+            else
+                connectFlags.and(FLAG_WILL_RETAIN_MASK.inv())
+        }
+    var passwordFlag: Boolean
+        @JsonIgnore
+        get() = connectFlags.and(FLAG_PASSWORD_MASK) > 0
+        set(value) {
+            connectFlags = if (value)
+                connectFlags.or(FLAG_PASSWORD_MASK)
+            else
+                connectFlags.and(FLAG_PASSWORD_MASK.inv())
+        }
+    var userNameFlag: Boolean
+        @JsonIgnore
+        get() = connectFlags.and(FLAG_USER_NAME_MASK) > 0
+        set(value) {
+            connectFlags = if (value)
+                connectFlags.or(FLAG_USER_NAME_MASK)
+            else
+                connectFlags.and(FLAG_USER_NAME_MASK.inv())
+        }
 
     constructor(): this(0) // needed for serialization.
 
@@ -147,5 +187,15 @@ class MqttConnect(flags: Int, remainingLength: Int = -1): MqttFixedHeader(MqttPa
         }
 
         return length
+    }
+
+
+    companion object {
+        private const val FLAG_CLEAN_START_MASK = 0x02
+        private const val FLAG_WILL_MASK = 0x04
+        private const val FLAG_WILL_QOS_MASK = 0x18
+        private const val FLAG_WILL_RETAIN_MASK = 0x20
+        private const val FLAG_PASSWORD_MASK = 0x40
+        private const val FLAG_USER_NAME_MASK = 0x80
     }
 }
