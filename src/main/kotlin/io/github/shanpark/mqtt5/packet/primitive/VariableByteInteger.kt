@@ -1,5 +1,7 @@
 package io.github.shanpark.mqtt5.packet.primitive
 
+import io.github.shanpark.buffers.ReadBuffer
+import io.github.shanpark.buffers.WriteBuffer
 import io.github.shanpark.mqtt5.exception.ExceedLimitException
 import io.github.shanpark.mqtt5.exception.MalformedPacketException
 import io.github.shanpark.mqtt5.exception.NotEnoughDataException
@@ -34,6 +36,20 @@ object VariableByteInteger {
         } while (data > 0)
     }
 
+    fun writeTo(buf: WriteBuffer, value: Int) {
+        if (value < 0 || value > 0x0fff_ffff)
+            throw ExceedLimitException("Try to write value that exceeds limit of VariableByteInt.")
+
+        var data = value
+        do {
+            var encodedByte = data % 0x80
+            data = data.shr(7) // if there are more data to encode, set the top bit of this byte
+            if (data > 0)
+                encodedByte = encodedByte.or(0x80)
+            buf.write(encodedByte)
+        } while (data > 0)
+    }
+
     fun readFrom(buf: ByteBuf): Int {
         try {
             var value = 0
@@ -43,6 +59,24 @@ object VariableByteInteger {
                     throw MalformedPacketException("Malformed Variable Byte Integer.")
 
                 val encodedByte: Int = buf.readUnsignedByte().toInt()
+                value += encodedByte.and(0x7f) * multiplier
+                multiplier *= 0x80
+            } while (encodedByte.and(0x80) != 0)
+            return value
+        } catch(e: IndexOutOfBoundsException) {
+            throw NotEnoughDataException("Not enough data for VariableByteInteger.")
+        }
+    }
+
+    fun readFrom(buf: ReadBuffer): Int {
+        try {
+            var value = 0
+            var multiplier = 1
+            do {
+                if (multiplier > 0x80 * 0x80 * 0x80)
+                    throw MalformedPacketException("Malformed Variable Byte Integer.")
+
+                val encodedByte: Int = buf.read()
                 value += encodedByte.and(0x7f) * multiplier
                 multiplier *= 0x80
             } while (encodedByte.and(0x80) != 0)

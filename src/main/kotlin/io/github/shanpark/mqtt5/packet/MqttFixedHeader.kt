@@ -1,6 +1,8 @@
 package io.github.shanpark.mqtt5.packet
 
 import com.fasterxml.jackson.annotation.JsonIgnore
+import io.github.shanpark.buffers.ReadBuffer
+import io.github.shanpark.buffers.WriteBuffer
 import io.github.shanpark.mqtt5.packet.primitive.constants.MqttPacketType
 import io.github.shanpark.mqtt5.packet.primitive.constants.MqttQos
 import io.netty.buffer.ByteBuf
@@ -37,6 +39,8 @@ abstract class MqttFixedHeader(
 
     abstract fun readFrom(buf: ByteBuf)
     abstract fun writeTo(buf: ByteBuf)
+    abstract fun readFrom(buf: ReadBuffer)
+    abstract fun writeTo(buf: WriteBuffer)
     protected abstract fun calcLength(): Int
 
     companion object {

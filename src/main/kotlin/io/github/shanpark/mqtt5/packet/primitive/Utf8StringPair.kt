@@ -1,5 +1,7 @@
 package io.github.shanpark.mqtt5.packet.primitive
 
+import io.github.shanpark.buffers.ReadBuffer
+import io.github.shanpark.buffers.WriteBuffer
 import io.netty.buffer.ByteBuf
 
 class Utf8StringPair(val name: String, val value: String) {
@@ -17,7 +19,16 @@ class Utf8StringPair(val name: String, val value: String) {
             Utf8EncodedString.writeTo(buf, value.value)
         }
 
+        fun writeTo(buf: WriteBuffer, value: Utf8StringPair) {
+            Utf8EncodedString.writeTo(buf, value.name)
+            Utf8EncodedString.writeTo(buf, value.value)
+        }
+
         fun readFrom(buf: ByteBuf): Utf8StringPair {
+            return Utf8StringPair(Utf8EncodedString.readFrom(buf), Utf8EncodedString.readFrom(buf))
+        }
+
+        fun readFrom(buf: ReadBuffer): Utf8StringPair {
             return Utf8StringPair(Utf8EncodedString.readFrom(buf), Utf8EncodedString.readFrom(buf))
         }
     }

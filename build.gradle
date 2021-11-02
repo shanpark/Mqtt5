@@ -17,12 +17,14 @@ publishing {
 
 repositories {
     mavenCentral()
+    maven { url 'https://jitpack.io' }
 }
 
 dependencies {
     implementation "org.jetbrains.kotlin:kotlin-stdlib:1.5.31"
     implementation "io.netty:netty-buffer:4.1.69.Final"
     implementation "com.fasterxml.jackson.core:jackson-annotations:2.13.0"
+    implementation 'io.github.shanpark:buffers:0.0.2'
 
     testImplementation "org.assertj:assertj-core:3.21.0"
     testImplementation "org.junit.jupiter:junit-jupiter-api:5.8.1"
