@@ -1,5 +1,7 @@
 package io.github.shanpark.mqtt5.packet
 
+import io.github.shanpark.buffers.ReadBuffer
+import io.github.shanpark.buffers.WriteBuffer
 import io.github.shanpark.mqtt5.exception.InvalidPacketException
 import io.github.shanpark.mqtt5.packet.derivative.MqttProperties
 import io.github.shanpark.mqtt5.packet.primitive.OneByteInteger
@@ -8,15 +10,13 @@ import io.github.shanpark.mqtt5.packet.primitive.constants.MqttPacketType
 import io.github.shanpark.mqtt5.packet.primitive.constants.MqttReasonCode
 import io.netty.buffer.ByteBuf
 
-class MqttConnAck(flags: Int, remainingLength: Int = -1): MqttFixedHeader(MqttPacketType.CONNACK, flags, remainingLength) {
+class MqttConnAck(flags: Int = 0, remainingLength: Int = -1): MqttFixedHeader(MqttPacketType.CONNACK, flags, remainingLength) {
     var connAckFlags: Int = 0
     var connectReasonCode = MqttReasonCode.SUCCESS_OR_GRANTED_QOS_0
     var properties = MqttProperties.EMPTY
 
     val sessionPresent: Boolean
         get() = connAckFlags.and(0x01) > 0
-
-    constructor(): this(0) // needed for serialization.
 
     constructor(sessionPresent: Boolean, connectReasonCode: MqttReasonCode, properties: MqttProperties = MqttProperties.EMPTY): this(0) {
         this.connAckFlags = if (sessionPresent) 0x01 else 0x00
@@ -38,7 +38,42 @@ class MqttConnAck(flags: Int, remainingLength: Int = -1): MqttFixedHeader(MqttPa
         // No Payload
     }
 
+    override fun readFrom(buf: ReadBuffer) {
+        ///////////////////////////////////////////////////////////////////////////////////////
+        // Variable Header
+        connAckFlags = OneByteInteger.readFrom(buf)
+        connectReasonCode = MqttReasonCode.valueOf(OneByteInteger.readFrom(buf))
+
+        val length = VariableByteInteger.readFrom(buf)
+        if (length > 0)
+            properties = MqttProperties().readFrom(buf.readSlice(length))
+
+        ///////////////////////////////////////////////////////////////////////////////////////
+        // No Payload
+    }
+
     override fun writeTo(buf: ByteBuf) {
+        if (remainingLength < 0)
+            remainingLength = calcLength()
+
+        ///////////////////////////////////////////////////////////////////////////////////////
+        // Fixed Header
+        OneByteInteger.writeTo(buf, type.value + flags)
+        VariableByteInteger.writeTo(buf, remainingLength)
+
+        ///////////////////////////////////////////////////////////////////////////////////////
+        // Variable Header
+        OneByteInteger.writeTo(buf, connAckFlags)
+        OneByteInteger.writeTo(buf, connectReasonCode.code)
+
+        VariableByteInteger.writeTo(buf, properties.length())
+        properties.writeTo(buf)
+
+        ///////////////////////////////////////////////////////////////////////////////////////
+        // No Payload
+    }
+
+    override fun writeTo(buf: WriteBuffer) {
         if (remainingLength < 0)
             remainingLength = calcLength()
 

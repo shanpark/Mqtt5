@@ -1,22 +1,21 @@
 package io.github.shanpark.mqtt5.packet
 
+import io.github.shanpark.buffers.ReadBuffer
+import io.github.shanpark.buffers.WriteBuffer
 import io.github.shanpark.mqtt5.exception.InvalidPacketException
-import io.github.shanpark.mqtt5.packet.MqttFixedHeader
+import io.github.shanpark.mqtt5.packet.derivative.MqttProperties
 import io.github.shanpark.mqtt5.packet.primitive.OneByteInteger
 import io.github.shanpark.mqtt5.packet.primitive.TwoByteInteger
-import io.github.shanpark.mqtt5.packet.primitive.constants.MqttReasonCode
-import io.github.shanpark.mqtt5.packet.derivative.MqttProperties
 import io.github.shanpark.mqtt5.packet.primitive.VariableByteInteger
 import io.github.shanpark.mqtt5.packet.primitive.constants.MqttPacketType
+import io.github.shanpark.mqtt5.packet.primitive.constants.MqttReasonCode
 import io.netty.buffer.ByteBuf
 
-class MqttPubComp(flags: Int, remainingLength: Int = -1): MqttFixedHeader(MqttPacketType.PUBCOMP, flags, remainingLength) {
+class MqttPubComp(flags: Int = 0, remainingLength: Int = -1): MqttFixedHeader(MqttPacketType.PUBCOMP, flags, remainingLength) {
 
     var packetId: Int = 0
     var pubCompReasonCode: MqttReasonCode = MqttReasonCode.SUCCESS_OR_GRANTED_QOS_0
     var properties = MqttProperties.EMPTY
-
-    constructor(): this(0) // needed for serialization.
 
     constructor(packetId: Int, reasonCode: MqttReasonCode, properties: MqttProperties = MqttProperties.EMPTY)
             :this(0) {
@@ -42,7 +41,46 @@ class MqttPubComp(flags: Int, remainingLength: Int = -1): MqttFixedHeader(MqttPa
         // No Payload
     }
 
+    override fun readFrom(buf: ReadBuffer) {
+        ///////////////////////////////////////////////////////////////////////////////////////
+        // Variable Header
+        packetId = TwoByteInteger.readFrom(buf)
+
+        if (buf.isReadable) { // reason code가 0이고 property가 없는 경우 나머지는 생략될 수 있다.
+            pubCompReasonCode = MqttReasonCode.valueOf(OneByteInteger.readFrom(buf))
+
+            val length = VariableByteInteger.readFrom(buf)
+            if (length > 0)
+                properties = MqttProperties().readFrom(buf.readSlice(length))
+        }
+
+        ///////////////////////////////////////////////////////////////////////////////////////
+        // No Payload
+    }
+
     override fun writeTo(buf: ByteBuf) {
+        if (remainingLength < 0)
+            remainingLength = calcLength()
+
+        ///////////////////////////////////////////////////////////////////////////////////////
+        // Fixed Header
+        OneByteInteger.writeTo(buf, type.value + flags)
+        VariableByteInteger.writeTo(buf, remainingLength)
+
+        ///////////////////////////////////////////////////////////////////////////////////////
+        // Variable Header
+        TwoByteInteger.writeTo(buf, packetId)
+
+        OneByteInteger.writeTo(buf, pubCompReasonCode.code)
+
+        VariableByteInteger.writeTo(buf, properties.length())
+        properties.writeTo(buf)
+
+        ///////////////////////////////////////////////////////////////////////////////////////
+        // No Payload
+    }
+
+    override fun writeTo(buf: WriteBuffer) {
         if (remainingLength < 0)
             remainingLength = calcLength()
 

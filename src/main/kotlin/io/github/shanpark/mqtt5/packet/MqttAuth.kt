@@ -1,5 +1,7 @@
 package io.github.shanpark.mqtt5.packet
 
+import io.github.shanpark.buffers.ReadBuffer
+import io.github.shanpark.buffers.WriteBuffer
 import io.github.shanpark.mqtt5.exception.InvalidPacketException
 import io.github.shanpark.mqtt5.packet.derivative.MqttProperties
 import io.github.shanpark.mqtt5.packet.primitive.OneByteInteger
@@ -8,12 +10,10 @@ import io.github.shanpark.mqtt5.packet.primitive.constants.MqttPacketType
 import io.github.shanpark.mqtt5.packet.primitive.constants.MqttReasonCode
 import io.netty.buffer.ByteBuf
 
-class MqttAuth(flags: Int, remainingLength: Int = -1): MqttFixedHeader(MqttPacketType.AUTH, flags, remainingLength) {
+class MqttAuth(flags: Int = 0, remainingLength: Int = -1): MqttFixedHeader(MqttPacketType.AUTH, flags, remainingLength) {
 
     var authReasonCode = MqttReasonCode.SUCCESS_OR_GRANTED_QOS_0
     var properties = MqttProperties.EMPTY
-
-    constructor(): this(0) // needed for serialization.
 
     override fun readFrom(buf: ByteBuf) {
         ///////////////////////////////////////////////////////////////////////////////////////
@@ -30,7 +30,42 @@ class MqttAuth(flags: Int, remainingLength: Int = -1): MqttFixedHeader(MqttPacke
         // No Payload
     }
 
+    override fun readFrom(buf: ReadBuffer) {
+        ///////////////////////////////////////////////////////////////////////////////////////
+        // Variable Header
+        if (buf.isReadable) { // reason code가 0이고 property가 없는 경우 나머지는 생략될 수 있다.
+            authReasonCode = MqttReasonCode.valueOf(OneByteInteger.readFrom(buf))
+
+            val length = VariableByteInteger.readFrom(buf)
+            if (length > 0)
+                properties = MqttProperties().readFrom(buf.readSlice(length))
+        }
+
+        ///////////////////////////////////////////////////////////////////////////////////////
+        // No Payload
+    }
+
     override fun writeTo(buf: ByteBuf) {
+        if (remainingLength < 0)
+            remainingLength = calcLength()
+
+        ///////////////////////////////////////////////////////////////////////////////////////
+        // Fixed Header
+        OneByteInteger.writeTo(buf, type.value + flags)
+        VariableByteInteger.writeTo(buf, remainingLength)
+
+        ///////////////////////////////////////////////////////////////////////////////////////
+        // Variable Header
+        OneByteInteger.writeTo(buf, authReasonCode.code)
+
+        VariableByteInteger.writeTo(buf, properties.length())
+        properties.writeTo(buf)
+
+        ///////////////////////////////////////////////////////////////////////////////////////
+        // No Payload
+    }
+
+    override fun writeTo(buf: WriteBuffer) {
         if (remainingLength < 0)
             remainingLength = calcLength()
 

@@ -1,5 +1,7 @@
 package io.github.shanpark.mqtt5.packet
 
+import io.github.shanpark.buffers.ReadBuffer
+import io.github.shanpark.buffers.WriteBuffer
 import io.github.shanpark.mqtt5.exception.InvalidPacketException
 import io.github.shanpark.mqtt5.packet.derivative.MqttProperties
 import io.github.shanpark.mqtt5.packet.primitive.OneByteInteger
@@ -8,12 +10,10 @@ import io.github.shanpark.mqtt5.packet.primitive.constants.MqttPacketType
 import io.github.shanpark.mqtt5.packet.primitive.constants.MqttReasonCode
 import io.netty.buffer.ByteBuf
 
-class MqttDisconnect(flags: Int, remainingLength: Int = -1): MqttFixedHeader(MqttPacketType.DISCONNECT, flags, remainingLength) {
+class MqttDisconnect(flags: Int = 0, remainingLength: Int = -1): MqttFixedHeader(MqttPacketType.DISCONNECT, flags, remainingLength) {
 
     var disconnectReasonCode = MqttReasonCode.SUCCESS_OR_GRANTED_QOS_0
     var properties = MqttProperties.EMPTY
-
-    constructor(): this(0) // needed for serialization.
 
     constructor(disconnectReasonCode: MqttReasonCode, properties: MqttProperties = MqttProperties.EMPTY): this(
         MqttPacketType.DISCONNECT.value.and(0)) {
@@ -36,7 +36,42 @@ class MqttDisconnect(flags: Int, remainingLength: Int = -1): MqttFixedHeader(Mqt
         }
     }
 
+    override fun readFrom(buf: ReadBuffer) {
+        if (buf.isReadable) { // reason code가 0인 경우 나머지는 생략될 수 있다.
+            ///////////////////////////////////////////////////////////////////////////////////////
+            // Variable Header
+            disconnectReasonCode = MqttReasonCode.valueOf(OneByteInteger.readFrom(buf))
+
+            val length = VariableByteInteger.readFrom(buf)
+            if (length > 0)
+                properties = MqttProperties().readFrom(buf.readSlice(length))
+
+            ///////////////////////////////////////////////////////////////////////////////////////
+            // No Payload
+        }
+    }
+
     override fun writeTo(buf: ByteBuf) {
+        if (remainingLength < 0)
+            remainingLength = calcLength()
+
+        ///////////////////////////////////////////////////////////////////////////////////////
+        // Fixed Header
+        OneByteInteger.writeTo(buf, type.value + flags)
+        VariableByteInteger.writeTo(buf, remainingLength)
+
+        ///////////////////////////////////////////////////////////////////////////////////////
+        // Variable Header
+        OneByteInteger.writeTo(buf, disconnectReasonCode.code)
+
+        VariableByteInteger.writeTo(buf, properties.length())
+        properties.writeTo(buf)
+
+        ///////////////////////////////////////////////////////////////////////////////////////
+        // No Payload
+    }
+
+    override fun writeTo(buf: WriteBuffer) {
         if (remainingLength < 0)
             remainingLength = calcLength()
 

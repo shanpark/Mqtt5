@@ -28,4 +28,19 @@ class MqttSubscriptionOptions(val value: Int = 0) {
         if (value.and(0x03) == 0x03)
             throw MalformedPacketException("QoS of Subscription Options can't be 3.")
     }
+
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (javaClass != other?.javaClass) return false
+
+        other as MqttSubscriptionOptions
+
+        if (value != other.value) return false
+
+        return true
+    }
+
+    override fun hashCode(): Int {
+        return value
+    }
 }

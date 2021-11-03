@@ -44,7 +44,7 @@ object BinaryData {
 
     fun readFrom(buf: ReadBuffer): ByteArray {
         val length = TwoByteInteger.readFrom(buf)
-        if (buf.readableBytes() < length)
+        if (buf.readableBytes < length)
             throw NotEnoughDataException("Not enough data for BinaryData")
         val data = ByteArray(length)
         buf.read(data)

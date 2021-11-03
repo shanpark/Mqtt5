@@ -1,5 +1,7 @@
 package io.github.shanpark.mqtt5.packet
 
+import io.github.shanpark.buffers.ReadBuffer
+import io.github.shanpark.buffers.WriteBuffer
 import io.github.shanpark.mqtt5.exception.InvalidPacketException
 import io.github.shanpark.mqtt5.packet.derivative.MqttProperties
 import io.github.shanpark.mqtt5.packet.primitive.OneByteInteger
@@ -9,13 +11,11 @@ import io.github.shanpark.mqtt5.packet.primitive.constants.MqttPacketType
 import io.github.shanpark.mqtt5.packet.primitive.constants.MqttReasonCode
 import io.netty.buffer.ByteBuf
 
-class MqttSubAck(flags: Int, remainingLength: Int = -1): MqttFixedHeader(MqttPacketType.SUBACK, flags, remainingLength) {
+class MqttSubAck(flags: Int = 0, remainingLength: Int = -1): MqttFixedHeader(MqttPacketType.SUBACK, flags, remainingLength) {
 
     var packetId: Int = 0
     var properties = MqttProperties.EMPTY
     var reasonCodes = listOf<MqttReasonCode>()
-
-    constructor(): this(0) // needed for serialization.
 
     constructor(packetId: Int, reasonCodes: List<MqttReasonCode>, properties: MqttProperties = MqttProperties.EMPTY)
             :this(0) {
@@ -27,7 +27,7 @@ class MqttSubAck(flags: Int, remainingLength: Int = -1): MqttFixedHeader(MqttPac
     override fun readFrom(buf: ByteBuf) {
         ///////////////////////////////////////////////////////////////////////////////////////
         // Variable Header
-        val variableHeaderStartIndex = buf.readerIndex()
+        val readableBytes = buf.readableBytes()
 
         packetId = TwoByteInteger.readFrom(buf)
 
@@ -37,7 +37,27 @@ class MqttSubAck(flags: Int, remainingLength: Int = -1): MqttFixedHeader(MqttPac
 
         ///////////////////////////////////////////////////////////////////////////////////////
         // Payload
-        val payloadLength = remainingLength - (buf.readerIndex() - variableHeaderStartIndex)
+        val payloadLength = remainingLength - (readableBytes - buf.readableBytes())
+        val reasonCodes: MutableList<MqttReasonCode> = mutableListOf()
+        for (inx in 0 until payloadLength)
+            reasonCodes.add(MqttReasonCode.valueOf(OneByteInteger.readFrom(buf)))
+        this.reasonCodes = reasonCodes
+    }
+
+    override fun readFrom(buf: ReadBuffer) {
+        ///////////////////////////////////////////////////////////////////////////////////////
+        // Variable Header
+        val readableBytes = buf.readableBytes
+
+        packetId = TwoByteInteger.readFrom(buf)
+
+        val length = VariableByteInteger.readFrom(buf)
+        if (length > 0)
+            properties = MqttProperties().readFrom(buf.readSlice(length))
+
+        ///////////////////////////////////////////////////////////////////////////////////////
+        // Payload
+        val payloadLength = remainingLength - (readableBytes - buf.readableBytes)
         val reasonCodes: MutableList<MqttReasonCode> = mutableListOf()
         for (inx in 0 until payloadLength)
             reasonCodes.add(MqttReasonCode.valueOf(OneByteInteger.readFrom(buf)))
@@ -45,6 +65,29 @@ class MqttSubAck(flags: Int, remainingLength: Int = -1): MqttFixedHeader(MqttPac
     }
 
     override fun writeTo(buf: ByteBuf) {
+        if (remainingLength < 0)
+            remainingLength = calcLength()
+
+        ///////////////////////////////////////////////////////////////////////////////////////
+        // Fixed Header
+        OneByteInteger.writeTo(buf, type.value + flags)
+        VariableByteInteger.writeTo(buf, remainingLength)
+
+        ///////////////////////////////////////////////////////////////////////////////////////
+        // Variable Header
+        TwoByteInteger.writeTo(buf, packetId)
+
+        VariableByteInteger.writeTo(buf, properties.length())
+        properties.writeTo(buf)
+
+        ///////////////////////////////////////////////////////////////////////////////////////
+        // Payload
+        for (reasonCode in reasonCodes) {
+            OneByteInteger.writeTo(buf, reasonCode.code)
+        }
+    }
+
+    override fun writeTo(buf: WriteBuffer) {
         if (remainingLength < 0)
             remainingLength = calcLength()
 

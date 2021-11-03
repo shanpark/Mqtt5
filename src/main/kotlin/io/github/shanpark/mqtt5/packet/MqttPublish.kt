@@ -1,5 +1,7 @@
 package io.github.shanpark.mqtt5.packet
 
+import io.github.shanpark.buffers.ReadBuffer
+import io.github.shanpark.buffers.WriteBuffer
 import io.github.shanpark.mqtt5.exception.InvalidPacketException
 import io.github.shanpark.mqtt5.packet.derivative.MqttProperties
 import io.github.shanpark.mqtt5.packet.primitive.OneByteInteger
@@ -10,13 +12,11 @@ import io.github.shanpark.mqtt5.packet.primitive.constants.MqttPacketType
 import io.github.shanpark.mqtt5.packet.primitive.constants.MqttQos
 import io.netty.buffer.ByteBuf
 
-class MqttPublish(flags: Int, remainingLength: Int = -1): MqttFixedHeader(MqttPacketType.PUBLISH, flags, remainingLength) {
+class MqttPublish(flags: Int = 0, remainingLength: Int = -1): MqttFixedHeader(MqttPacketType.PUBLISH, flags, remainingLength) {
     var topicName: String = ""
     var packetId: Int = 0
     var properties = MqttProperties.EMPTY
     var payload: ByteArray = byteArrayOf() // Mqtt BinaryData가 아니라 그냥 byte array이다.
-
-    constructor(): this(0) // needed for serialization.
 
     constructor(dup: Boolean, qos: MqttQos, retain: Boolean, topicName: String, packetId: Int, properties: MqttProperties = MqttProperties.EMPTY, payload: ByteArray)
             :this((if (dup) 0x08 else 0).or(if (retain) 0x01 else 0).or(qos.level.shl(1))) {
@@ -37,7 +37,7 @@ class MqttPublish(flags: Int, remainingLength: Int = -1): MqttFixedHeader(MqttPa
     override fun readFrom(buf: ByteBuf) {
         ///////////////////////////////////////////////////////////////////////////////////////
         // Variable Header
-        val variableHeaderStartIndex = buf.readerIndex()
+        val readableBytes = buf.readableBytes()
 
         topicName = Utf8EncodedString.readFrom(buf)
 
@@ -50,9 +50,30 @@ class MqttPublish(flags: Int, remainingLength: Int = -1): MqttFixedHeader(MqttPa
 
         ///////////////////////////////////////////////////////////////////////////////////////
         // Payload
-        val payloadLength = remainingLength - (buf.readerIndex() - variableHeaderStartIndex)
+        val payloadLength = remainingLength - (readableBytes - buf.readableBytes())
         payload = ByteArray(payloadLength)
         buf.readBytes(payload) // BinaryData가 아니라 byte array이므로 buf에서 직접 읽는다.
+    }
+
+    override fun readFrom(buf: ReadBuffer) {
+        ///////////////////////////////////////////////////////////////////////////////////////
+        // Variable Header
+        val readableBytes = buf.readableBytes
+
+        topicName = Utf8EncodedString.readFrom(buf)
+
+        if (qos.level > 0)
+            packetId = TwoByteInteger.readFrom(buf)
+
+        val length = VariableByteInteger.readFrom(buf)
+        if (length > 0)
+            properties = MqttProperties().readFrom(buf.readSlice(length))
+
+        ///////////////////////////////////////////////////////////////////////////////////////
+        // Payload
+        val payloadLength = remainingLength - (readableBytes - buf.readableBytes)
+        payload = ByteArray(payloadLength)
+        buf.read(payload) // BinaryData가 아니라 byte array이므로 buf에서 직접 읽는다.
     }
 
     override fun writeTo(buf: ByteBuf) {
@@ -77,6 +98,30 @@ class MqttPublish(flags: Int, remainingLength: Int = -1): MqttFixedHeader(MqttPa
         ///////////////////////////////////////////////////////////////////////////////////////
         // Payload
         buf.writeBytes(payload) // payload는 byte array일 뿐 BinaryData 형식이 아니다. buf에 직접 쓴다.
+    }
+
+    override fun writeTo(buf: WriteBuffer) {
+        if (remainingLength < 0)
+            remainingLength = calcLength()
+
+        ///////////////////////////////////////////////////////////////////////////////////////
+        // Fixed Header
+        OneByteInteger.writeTo(buf, type.value + flags)
+        VariableByteInteger.writeTo(buf, remainingLength)
+
+        ///////////////////////////////////////////////////////////////////////////////////////
+        // Variable Header
+        Utf8EncodedString.writeTo(buf, topicName)
+
+        if (qos.level > 0)
+            TwoByteInteger.writeTo(buf, packetId)
+
+        VariableByteInteger.writeTo(buf, properties.length())
+        properties.writeTo(buf)
+
+        ///////////////////////////////////////////////////////////////////////////////////////
+        // Payload
+        buf.write(payload) // payload는 byte array일 뿐 BinaryData 형식이 아니다. buf에 직접 쓴다.
     }
 
     /**

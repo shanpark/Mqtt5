@@ -51,7 +51,7 @@ object Utf8EncodedString {
 
     fun readFrom(buf: ReadBuffer): String {
         val length = TwoByteInteger.readFrom(buf)
-        if (length > buf.readableBytes())
+        if (length > buf.readableBytes)
             throw NotEnoughDataException("Not enough data for Utf8EncodedString")
         return buf.readString(length, Charsets.UTF_8)
     }

@@ -8,9 +8,7 @@ import io.github.shanpark.mqtt5.packet.primitive.VariableByteInteger
 import io.github.shanpark.mqtt5.packet.primitive.constants.MqttPacketType
 import io.netty.buffer.ByteBuf
 
-class MqttPingResp(flags: Int, remainingLength: Int = -1): MqttFixedHeader(MqttPacketType.PINGRESP, flags, remainingLength) {
-
-    constructor(): this(0) // needed for serialization.
+class MqttPingResp(flags: Int = 0, remainingLength: Int = -1): MqttFixedHeader(MqttPacketType.PINGRESP, flags, remainingLength) {
 
     override fun readFrom(buf: ByteBuf) {
         ///////////////////////////////////////////////////////////////////////////////////////
