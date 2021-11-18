@@ -6,9 +6,9 @@ plugins {
 publishing {
     publications {
         mavenJava(MavenPublication) {
-            groupId = 'io.github.shanpark'
+            groupId = 'com.github.shanpark'
             artifactId = 'mqtt5'
-            version = '0.0.1'
+            version = '0.0.2'
 
             from components.java
         }
@@ -22,8 +22,8 @@ repositories {
 
 dependencies {
     implementation "org.jetbrains.kotlin:kotlin-stdlib:1.5.31"
-    implementation "io.netty:netty-buffer:4.1.69.Final"
-    implementation "io.github.shanpark:buffers:0.0.5"
+    implementation 'io.netty:netty-buffer:4.1.70.Final'
+    implementation "com.github.shanpark:buffers:0.0.8"
     implementation 'com.fasterxml.jackson.core:jackson-annotations:2.13.0'
 
     testImplementation "org.assertj:assertj-core:3.21.0"

@@ -1,13 +1,13 @@
-import io.github.shanpark.buffers.Buffer
-import io.github.shanpark.mqtt5.packet.*
-import io.github.shanpark.mqtt5.packet.derivative.MqttProperties
-import io.github.shanpark.mqtt5.packet.derivative.MqttSubscriptionOptions
-import io.github.shanpark.mqtt5.packet.primitive.OneByteInteger
-import io.github.shanpark.mqtt5.packet.primitive.VariableByteInteger
-import io.github.shanpark.mqtt5.packet.primitive.constants.MqttPacketType
-import io.github.shanpark.mqtt5.packet.primitive.constants.MqttProperty
-import io.github.shanpark.mqtt5.packet.primitive.constants.MqttQos
-import io.github.shanpark.mqtt5.packet.primitive.constants.MqttReasonCode
+import com.github.shanpark.buffers.Buffer
+import com.github.shanpark.mqtt5.packet.*
+import com.github.shanpark.mqtt5.packet.derivative.MqttProperties
+import com.github.shanpark.mqtt5.packet.derivative.MqttSubscriptionOptions
+import com.github.shanpark.mqtt5.packet.primitive.OneByteInteger
+import com.github.shanpark.mqtt5.packet.primitive.VariableByteInteger
+import com.github.shanpark.mqtt5.packet.primitive.constants.MqttPacketType
+import com.github.shanpark.mqtt5.packet.primitive.constants.MqttProperty
+import com.github.shanpark.mqtt5.packet.primitive.constants.MqttQos
+import com.github.shanpark.mqtt5.packet.primitive.constants.MqttReasonCode
 import io.netty.buffer.ByteBuf
 import io.netty.buffer.PooledByteBufAllocator
 import org.assertj.core.api.Assertions.assertThat
@@ -339,20 +339,53 @@ class Test {
             Fail.fail<Unit>("'buf' should have enough data.")
 
         val packet = when (MqttPacketType.valueOf(typeAndFlags.and(0xf0))) {
-            MqttPacketType.CONNECT -> MqttConnect(typeAndFlags.and(0x0f), remainingLength)
-            MqttPacketType.CONNACK -> MqttConnAck(typeAndFlags.and(0x0f), remainingLength)
-            MqttPacketType.PUBLISH -> MqttPublish(typeAndFlags.and(0x0f), remainingLength)
-            MqttPacketType.PUBACK -> MqttPubAck(typeAndFlags.and(0x0f), remainingLength)
-            MqttPacketType.PUBREC -> MqttPubRec(typeAndFlags.and(0x0f), remainingLength)
-            MqttPacketType.PUBREL -> MqttPubRel(typeAndFlags.and(0x0f), remainingLength)
-            MqttPacketType.PUBCOMP -> MqttPubComp(typeAndFlags.and(0x0f), remainingLength)
+            MqttPacketType.CONNECT -> MqttConnect(
+                typeAndFlags.and(0x0f),
+                remainingLength
+            )
+            MqttPacketType.CONNACK -> MqttConnAck(
+                typeAndFlags.and(0x0f),
+                remainingLength
+            )
+            MqttPacketType.PUBLISH -> MqttPublish(
+                typeAndFlags.and(0x0f),
+                remainingLength
+            )
+            MqttPacketType.PUBACK -> MqttPubAck(
+                typeAndFlags.and(0x0f),
+                remainingLength
+            )
+            MqttPacketType.PUBREC -> MqttPubRec(
+                typeAndFlags.and(0x0f),
+                remainingLength
+            )
+            MqttPacketType.PUBREL -> MqttPubRel(
+                typeAndFlags.and(0x0f),
+                remainingLength
+            )
+            MqttPacketType.PUBCOMP -> MqttPubComp(
+                typeAndFlags.and(0x0f),
+                remainingLength
+            )
             MqttPacketType.SUBSCRIBE -> MqttSubscribe(typeAndFlags.and(0x0f), remainingLength)
-            MqttPacketType.SUBACK -> MqttSubAck(typeAndFlags.and(0x0f), remainingLength)
+            MqttPacketType.SUBACK -> MqttSubAck(
+                typeAndFlags.and(0x0f),
+                remainingLength
+            )
             MqttPacketType.UNSUBSCRIBE -> MqttUnsubscribe(typeAndFlags.and(0x0f), remainingLength)
             MqttPacketType.UNSUBACK -> MqttUnsubAck(typeAndFlags.and(0x0f), remainingLength)
-            MqttPacketType.PINGREQ -> MqttPingReq(typeAndFlags.and(0x0f), remainingLength)
-            MqttPacketType.PINGRESP -> MqttPingResp(typeAndFlags.and(0x0f), remainingLength)
-            MqttPacketType.DISCONNECT -> MqttDisconnect(typeAndFlags.and(0x0f), remainingLength)
+            MqttPacketType.PINGREQ -> MqttPingReq(
+                typeAndFlags.and(0x0f),
+                remainingLength
+            )
+            MqttPacketType.PINGRESP -> MqttPingResp(
+                typeAndFlags.and(0x0f),
+                remainingLength
+            )
+            MqttPacketType.DISCONNECT -> MqttDisconnect(
+                typeAndFlags.and(0x0f),
+                remainingLength
+            )
             MqttPacketType.AUTH -> MqttAuth(typeAndFlags.and(0x0f), remainingLength)
         }
         packet.readFrom(buf.readSlice(remainingLength)) // 반드시 slice로 잘라서 넘겨야함. 남은 데이터 끝까지 읽어야 하는 경우가 있기 때문에
@@ -366,20 +399,53 @@ class Test {
             Fail.fail<Unit>("'buf' should have enough data.")
 
         val packet = when (MqttPacketType.valueOf(typeAndFlags.and(0xf0))) {
-            MqttPacketType.CONNECT -> MqttConnect(typeAndFlags.and(0x0f), remainingLength)
-            MqttPacketType.CONNACK -> MqttConnAck(typeAndFlags.and(0x0f), remainingLength)
-            MqttPacketType.PUBLISH -> MqttPublish(typeAndFlags.and(0x0f), remainingLength)
-            MqttPacketType.PUBACK -> MqttPubAck(typeAndFlags.and(0x0f), remainingLength)
-            MqttPacketType.PUBREC -> MqttPubRec(typeAndFlags.and(0x0f), remainingLength)
-            MqttPacketType.PUBREL -> MqttPubRel(typeAndFlags.and(0x0f), remainingLength)
-            MqttPacketType.PUBCOMP -> MqttPubComp(typeAndFlags.and(0x0f), remainingLength)
+            MqttPacketType.CONNECT -> MqttConnect(
+                typeAndFlags.and(0x0f),
+                remainingLength
+            )
+            MqttPacketType.CONNACK -> MqttConnAck(
+                typeAndFlags.and(0x0f),
+                remainingLength
+            )
+            MqttPacketType.PUBLISH -> MqttPublish(
+                typeAndFlags.and(0x0f),
+                remainingLength
+            )
+            MqttPacketType.PUBACK -> MqttPubAck(
+                typeAndFlags.and(0x0f),
+                remainingLength
+            )
+            MqttPacketType.PUBREC -> MqttPubRec(
+                typeAndFlags.and(0x0f),
+                remainingLength
+            )
+            MqttPacketType.PUBREL -> MqttPubRel(
+                typeAndFlags.and(0x0f),
+                remainingLength
+            )
+            MqttPacketType.PUBCOMP -> MqttPubComp(
+                typeAndFlags.and(0x0f),
+                remainingLength
+            )
             MqttPacketType.SUBSCRIBE -> MqttSubscribe(typeAndFlags.and(0x0f), remainingLength)
-            MqttPacketType.SUBACK -> MqttSubAck(typeAndFlags.and(0x0f), remainingLength)
+            MqttPacketType.SUBACK -> MqttSubAck(
+                typeAndFlags.and(0x0f),
+                remainingLength
+            )
             MqttPacketType.UNSUBSCRIBE -> MqttUnsubscribe(typeAndFlags.and(0x0f), remainingLength)
             MqttPacketType.UNSUBACK -> MqttUnsubAck(typeAndFlags.and(0x0f), remainingLength)
-            MqttPacketType.PINGREQ -> MqttPingReq(typeAndFlags.and(0x0f), remainingLength)
-            MqttPacketType.PINGRESP -> MqttPingResp(typeAndFlags.and(0x0f), remainingLength)
-            MqttPacketType.DISCONNECT -> MqttDisconnect(typeAndFlags.and(0x0f), remainingLength)
+            MqttPacketType.PINGREQ -> MqttPingReq(
+                typeAndFlags.and(0x0f),
+                remainingLength
+            )
+            MqttPacketType.PINGRESP -> MqttPingResp(
+                typeAndFlags.and(0x0f),
+                remainingLength
+            )
+            MqttPacketType.DISCONNECT -> MqttDisconnect(
+                typeAndFlags.and(0x0f),
+                remainingLength
+            )
             MqttPacketType.AUTH -> MqttAuth(typeAndFlags.and(0x0f), remainingLength)
         }
         packet.readFrom(buf.readSlice(remainingLength)) // 반드시 slice로 잘라서 넘겨야함. 남은 데이터 끝까지 읽어야 하는 경우가 있기 때문에
