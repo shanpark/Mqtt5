@@ -16,7 +16,7 @@ import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
 
 class Test {
-    val properties: MqttProperties = MqttProperties()
+    private val properties: MqttProperties = MqttProperties()
 
     @Test
     @DisplayName("Read/WriteBuffer Serialize/Deserialize 테스트")

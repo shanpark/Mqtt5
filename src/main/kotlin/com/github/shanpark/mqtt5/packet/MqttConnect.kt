@@ -26,54 +26,54 @@ class MqttConnect(flags: Int = 0, remainingLength: Int = -1): com.github.shanpar
 
     var cleanStart: Boolean
         @JsonIgnore
-        get() = connectFlags.and(com.github.shanpark.mqtt5.packet.MqttConnect.Companion.FLAG_CLEAN_START_MASK) > 0
+        get() = connectFlags.and(FLAG_CLEAN_START_MASK) > 0
         set(value) {
             connectFlags = if (value)
-                connectFlags.or(com.github.shanpark.mqtt5.packet.MqttConnect.Companion.FLAG_CLEAN_START_MASK)
+                connectFlags.or(FLAG_CLEAN_START_MASK)
             else
-                connectFlags.and(com.github.shanpark.mqtt5.packet.MqttConnect.Companion.FLAG_CLEAN_START_MASK.inv())
+                connectFlags.and(FLAG_CLEAN_START_MASK.inv())
         }
     var willFlag: Boolean
         @JsonIgnore
-        get() = connectFlags.and(com.github.shanpark.mqtt5.packet.MqttConnect.Companion.FLAG_WILL_MASK) > 0
+        get() = connectFlags.and(FLAG_WILL_MASK) > 0
         set(value) {
             connectFlags = if (value)
-                connectFlags.or(com.github.shanpark.mqtt5.packet.MqttConnect.Companion.FLAG_WILL_MASK)
+                connectFlags.or(FLAG_WILL_MASK)
             else
-                connectFlags.and(com.github.shanpark.mqtt5.packet.MqttConnect.Companion.FLAG_WILL_MASK.inv())
+                connectFlags.and(FLAG_WILL_MASK.inv())
         }
     var willQos: MqttQos
         @JsonIgnore
-        get() = MqttQos.valueOf(connectFlags.and(com.github.shanpark.mqtt5.packet.MqttConnect.Companion.FLAG_WILL_QOS_MASK).shr(3))
+        get() = MqttQos.valueOf(connectFlags.and(FLAG_WILL_QOS_MASK).shr(3))
         set(value) {
-            connectFlags = connectFlags.and(com.github.shanpark.mqtt5.packet.MqttConnect.Companion.FLAG_WILL_QOS_MASK.inv()).or(value.level.shl(3))
+            connectFlags = connectFlags.and(FLAG_WILL_QOS_MASK.inv()).or(value.level.shl(3))
         }
     var willRetain: Boolean
         @JsonIgnore
-        get() = connectFlags.and(com.github.shanpark.mqtt5.packet.MqttConnect.Companion.FLAG_WILL_RETAIN_MASK) > 0
+        get() = connectFlags.and(FLAG_WILL_RETAIN_MASK) > 0
         set(value) {
             connectFlags = if (value)
-                connectFlags.or(com.github.shanpark.mqtt5.packet.MqttConnect.Companion.FLAG_WILL_RETAIN_MASK)
+                connectFlags.or(FLAG_WILL_RETAIN_MASK)
             else
-                connectFlags.and(com.github.shanpark.mqtt5.packet.MqttConnect.Companion.FLAG_WILL_RETAIN_MASK.inv())
+                connectFlags.and(FLAG_WILL_RETAIN_MASK.inv())
         }
     var passwordFlag: Boolean
         @JsonIgnore
-        get() = connectFlags.and(com.github.shanpark.mqtt5.packet.MqttConnect.Companion.FLAG_PASSWORD_MASK) > 0
+        get() = connectFlags.and(FLAG_PASSWORD_MASK) > 0
         set(value) {
             connectFlags = if (value)
-                connectFlags.or(com.github.shanpark.mqtt5.packet.MqttConnect.Companion.FLAG_PASSWORD_MASK)
+                connectFlags.or(FLAG_PASSWORD_MASK)
             else
-                connectFlags.and(com.github.shanpark.mqtt5.packet.MqttConnect.Companion.FLAG_PASSWORD_MASK.inv())
+                connectFlags.and(FLAG_PASSWORD_MASK.inv())
         }
     var userNameFlag: Boolean
         @JsonIgnore
-        get() = connectFlags.and(com.github.shanpark.mqtt5.packet.MqttConnect.Companion.FLAG_USER_NAME_MASK) > 0
+        get() = connectFlags.and(FLAG_USER_NAME_MASK) > 0
         set(value) {
             connectFlags = if (value)
-                connectFlags.or(com.github.shanpark.mqtt5.packet.MqttConnect.Companion.FLAG_USER_NAME_MASK)
+                connectFlags.or(FLAG_USER_NAME_MASK)
             else
-                connectFlags.and(com.github.shanpark.mqtt5.packet.MqttConnect.Companion.FLAG_USER_NAME_MASK.inv())
+                connectFlags.and(FLAG_USER_NAME_MASK.inv())
         }
 
     override fun readFrom(buf: ByteBuf) {
@@ -172,22 +172,22 @@ class MqttConnect(flags: Int = 0, remainingLength: Int = -1): com.github.shanpar
         if (willFlag) {
             VariableByteInteger.writeTo(buf, willProperties?.length() ?: 0) // Will properties may be empty.
             willProperties?.writeTo(buf)
-            Utf8EncodedString.writeTo(buf, willTopic ?: throw com.github.shanpark.mqtt5.exception.InvalidPacketException(
+            Utf8EncodedString.writeTo(buf, willTopic ?: throw InvalidPacketException(
                 "Will Flag is set but will topic field is null."
             )
             )
-            BinaryData.writeTo(buf, willPayload ?: throw com.github.shanpark.mqtt5.exception.InvalidPacketException("Will Flag is set but will payload field is null."))
+            BinaryData.writeTo(buf, willPayload ?: throw InvalidPacketException("Will Flag is set but will payload field is null."))
         }
 
         if (userNameFlag) {
-            Utf8EncodedString.writeTo(buf, userName ?: throw com.github.shanpark.mqtt5.exception.InvalidPacketException(
+            Utf8EncodedString.writeTo(buf, userName ?: throw InvalidPacketException(
                 "User Name Flag is set but user name field is null."
             )
             )
         }
 
         if (passwordFlag) {
-            BinaryData.writeTo(buf, password ?: throw com.github.shanpark.mqtt5.exception.InvalidPacketException("Password Flag is set but password field is null."))
+            BinaryData.writeTo(buf, password ?: throw InvalidPacketException("Password Flag is set but password field is null."))
         }
     }
 
@@ -217,22 +217,22 @@ class MqttConnect(flags: Int = 0, remainingLength: Int = -1): com.github.shanpar
         if (willFlag) {
             VariableByteInteger.writeTo(buf, willProperties?.length() ?: 0) // Will properties may be empty.
             willProperties?.writeTo(buf)
-            Utf8EncodedString.writeTo(buf, willTopic ?: throw com.github.shanpark.mqtt5.exception.InvalidPacketException(
+            Utf8EncodedString.writeTo(buf, willTopic ?: throw InvalidPacketException(
                 "Will Flag is set but will topic field is null."
             )
             )
-            BinaryData.writeTo(buf, willPayload ?: throw com.github.shanpark.mqtt5.exception.InvalidPacketException("Will Flag is set but will payload field is null."))
+            BinaryData.writeTo(buf, willPayload ?: throw InvalidPacketException("Will Flag is set but will payload field is null."))
         }
 
         if (userNameFlag) {
-            Utf8EncodedString.writeTo(buf, userName ?: throw com.github.shanpark.mqtt5.exception.InvalidPacketException(
+            Utf8EncodedString.writeTo(buf, userName ?: throw InvalidPacketException(
                 "User Name Flag is set but user name field is null."
             )
             )
         }
 
         if (passwordFlag) {
-            BinaryData.writeTo(buf, password ?: throw com.github.shanpark.mqtt5.exception.InvalidPacketException("Password Flag is set but password field is null."))
+            BinaryData.writeTo(buf, password ?: throw InvalidPacketException("Password Flag is set but password field is null."))
         }
     }
 
@@ -259,11 +259,11 @@ class MqttConnect(flags: Int = 0, remainingLength: Int = -1): com.github.shanpar
             length += (
                     VariableByteInteger.length(willProperties?.length() ?: 0) + // Will properties may be empty.
                             (willProperties?.length() ?: 0) +
-                            Utf8EncodedString.length(willTopic ?: throw com.github.shanpark.mqtt5.exception.InvalidPacketException(
+                            Utf8EncodedString.length(willTopic ?: throw InvalidPacketException(
                                 "Will Flag is set but will topic field is null."
                             )
                             ) +
-                            BinaryData.length(willPayload ?: throw com.github.shanpark.mqtt5.exception.InvalidPacketException(
+                            BinaryData.length(willPayload ?: throw InvalidPacketException(
                                 "Will Flag is set but will payload field is null."
                             )
                             )
@@ -271,19 +271,18 @@ class MqttConnect(flags: Int = 0, remainingLength: Int = -1): com.github.shanpar
         }
 
         if (userNameFlag) {
-            length += Utf8EncodedString.length(userName ?: throw com.github.shanpark.mqtt5.exception.InvalidPacketException(
+            length += Utf8EncodedString.length(userName ?: throw InvalidPacketException(
                 "User Name Flag is set but user name field is null."
             )
             )
         }
 
         if (passwordFlag) {
-            length += BinaryData.length(password ?: throw com.github.shanpark.mqtt5.exception.InvalidPacketException("Password Flag is set but password field is null."))
+            length += BinaryData.length(password ?: throw InvalidPacketException("Password Flag is set but password field is null."))
         }
 
         return length
     }
-
 
     companion object {
         private const val FLAG_CLEAN_START_MASK = 0x02

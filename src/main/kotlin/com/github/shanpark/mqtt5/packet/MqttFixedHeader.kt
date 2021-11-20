@@ -14,27 +14,27 @@ abstract class MqttFixedHeader(
 ) {
     var dup: Boolean
         @JsonIgnore
-        get() = flags.and(com.github.shanpark.mqtt5.packet.MqttFixedHeader.Companion.FLAG_DUP_MASK) != 0
+        get() = flags.and(FLAG_DUP_MASK) != 0
         set(value) {
             flags = if (value)
-                flags.or(com.github.shanpark.mqtt5.packet.MqttFixedHeader.Companion.FLAG_DUP_MASK)
+                flags.or(FLAG_DUP_MASK)
             else
-                flags.and(com.github.shanpark.mqtt5.packet.MqttFixedHeader.Companion.FLAG_DUP_MASK.inv())
+                flags.and(FLAG_DUP_MASK.inv())
         }
     var qos: MqttQos
         @JsonIgnore
-        get() = MqttQos.valueOf(flags.and(com.github.shanpark.mqtt5.packet.MqttFixedHeader.Companion.FLAG_QOS_MASK).shr(1))
+        get() = MqttQos.valueOf(flags.and(FLAG_QOS_MASK).shr(1))
         set(value) {
-            flags = flags.and(com.github.shanpark.mqtt5.packet.MqttFixedHeader.Companion.FLAG_QOS_MASK.inv()).or(value.level.shl(1))
+            flags = flags.and(FLAG_QOS_MASK.inv()).or(value.level.shl(1))
         }
     var retain: Boolean
         @JsonIgnore
-        get() = flags.and(com.github.shanpark.mqtt5.packet.MqttFixedHeader.Companion.FLAG_RETAIN_MASK) != 0
+        get() = flags.and(FLAG_RETAIN_MASK) != 0
         set(value) {
             flags = if (value)
-                flags.or(com.github.shanpark.mqtt5.packet.MqttFixedHeader.Companion.FLAG_RETAIN_MASK)
+                flags.or(FLAG_RETAIN_MASK)
             else
-                flags.and(com.github.shanpark.mqtt5.packet.MqttFixedHeader.Companion.FLAG_RETAIN_MASK.inv())
+                flags.and(FLAG_RETAIN_MASK.inv())
         }
 
     abstract fun readFrom(buf: ByteBuf)

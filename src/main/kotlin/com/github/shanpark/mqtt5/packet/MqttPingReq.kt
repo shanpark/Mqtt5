@@ -69,6 +69,6 @@ class MqttPingReq(flags: Int = 0, remainingLength: Int = -1): com.github.shanpar
     }
 
     companion object {
-        val INSTANCE = com.github.shanpark.mqtt5.packet.MqttPingReq()
+        val INSTANCE = MqttPingReq()
     }
 }

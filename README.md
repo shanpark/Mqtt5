@@ -6,13 +6,27 @@
 
 To install the library add:
 
+* Gradle
 ```gradle
 repositories { 
-   ...
-   maven { url "https://jitpack.io" }
+    ...
+    maven { url "https://jitpack.io" }
 }
 
 dependencies {
-   implementation 'com.github.shanpark:mqtt5:0.0.2'
+    implementation 'com.github.shanpark:mqtt5:0.0.2'
+}
+```
+
+* Gradle(Kotlin)
+```gradle
+repositories { 
+    ...
+    maven { url = uri("https://jitpack.io") }
+
+}
+
+dependencies {
+    implementation('com.github.shanpark:mqtt5:0.0.2')
 }
 ```
